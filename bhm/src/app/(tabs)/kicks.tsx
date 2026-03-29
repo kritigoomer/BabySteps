@@ -10,12 +10,16 @@ import {
 
 export default function KicksScreen() {
   const router = useRouter();
+  // Placeholder for stored data
+  const lastAverage = 11; // Would be loaded from storage
+  const currentAverage = 11; // Would be calculated
+  const comparison = currentAverage > lastAverage ? 'increased' : currentAverage < lastAverage ? 'decreased' : 'same';
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.cardsContainer}>
         <View style={styles.card}>
-          <Text style={styles.cardNumber}>11</Text>
+          <Text style={styles.cardNumber}>{currentAverage}</Text>
           <Text style={styles.cardLabel}>Average Mins Between Kicks</Text>
         </View>
         <View style={styles.card}>
@@ -25,6 +29,10 @@ export default function KicksScreen() {
         <View style={styles.wideCard}>
           <Text style={styles.wideCardText}>11AM-1PM</Text>
           <Text style={styles.cardLabel}>Your baby is most active</Text>
+        </View>
+        <View style={styles.card}>
+          <Text style={styles.cardText}>{comparison}</Text>
+          <Text style={styles.cardLabel}>Compared to last session</Text>
         </View>
       </View>
 
@@ -59,6 +67,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   card: {
+    maxWidth: 128,
     padding: 16,
     borderRadius: 15,
     borderWidth: 2,

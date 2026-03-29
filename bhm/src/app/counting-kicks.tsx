@@ -14,6 +14,9 @@ export default function CountingKicksScreen() {
   const [averageTime, setAverageTime] = useState(0);
   const [startTime, setStartTime] = useState(Date.now());
   const [kickTimes, setKickTimes] = useState<number[]>([]);
+  const [showPositionReminder, setShowPositionReminder] = useState(true);
+  const [history, setHistory] = useState<{date: string, average: number}[]>([]);
+  const [lastSessionAverage, setLastSessionAverage] = useState<number | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -40,6 +43,21 @@ export default function CountingKicksScreen() {
     }
   };
 
+  const handleUndo = () => {
+    if (kickCount > 0) {
+      setKickCount(kickCount - 1);
+      setKickTimes(kickTimes.slice(0, -1));
+    }
+  };
+
+  const handleFinish = () => {
+    // Save to history
+    const newHistory = [...history, {date: new Date().toLocaleDateString(), average: averageTime}];
+    setHistory(newHistory);
+    setLastSessionAverage(averageTime);
+    router.push('/(tabs)/kicks');
+  };
+
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -54,34 +72,66 @@ export default function CountingKicksScreen() {
         <Text style={styles.closeText}>✕</Text>
       </TouchableOpacity>
 
-      <View style={styles.cardsContainer}>
-        <View style={styles.card}>
-          <View style={styles.cardTop}>
-            <Text style={styles.cardNumber}>{kickCount}</Text>
-            <Text style={styles.cardDenom}>/10</Text>
+      {showPositionReminder ? (
+        <View style={styles.reminderContainer}>
+          <Text style={styles.reminderTitle}>Get into position</Text>
+          <Text style={styles.reminderText}>
+            Sit with feet up or lie on side, place hands on stomach
+          </Text>
+          <TouchableOpacity style={styles.startButton} onPress={() => setShowPositionReminder(false)}>
+            <Text style={styles.startButtonText}>Start Counting</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
+          <View style={styles.cardsContainer}>
+            <View style={styles.card}>
+              <View style={styles.cardTop}>
+                <Text style={styles.cardNumber}>{kickCount}</Text>
+                <Text style={styles.cardDenom}>/10</Text>
+              </View>
+              <Text style={styles.cardLabel}>Kick Count</Text>
+            </View>
+            <View style={styles.card}>
+              <Text style={styles.cardTime}>{formatTime(elapsedTime)}</Text>
+              <Text style={styles.cardLabel}>Elapsed Time</Text>
+            </View>
+            <View style={styles.wideCard}>
+              <Text style={styles.cardTime}>{formatTime(averageTime)}</Text>
+              <Text style={styles.cardLabel}>Average Time Between Each Kick</Text>
+            </View>
+            {lastSessionAverage && (
+              <View style={styles.wideCard}>
+                <Text style={styles.cardTime}>{formatTime(lastSessionAverage)}</Text>
+                <Text style={styles.cardLabel}>Last Session Average</Text>
+              </View>
+            )}
           </View>
-          <Text style={styles.cardLabel}>Kick Count</Text>
-        </View>
-        <View style={styles.card}>
-          <Text style={styles.cardTime}>{formatTime(elapsedTime)}</Text>
-          <Text style={styles.cardLabel}>Elapsed Time</Text>
-        </View>
-        <View style={styles.wideCard}>
-          <Text style={styles.cardTime}>{formatTime(averageTime)}</Text>
-          <Text style={styles.cardLabel}>Average Time Between Each Kick</Text>
-        </View>
-      </View>
 
-      <TouchableOpacity style={styles.kickButton} onPress={handleKick}>
-        <Text style={styles.kickText}>Kick!</Text>
-      </TouchableOpacity>
+          <TouchableOpacity style={styles.kickButton} onPress={handleKick}>
+            <Text style={styles.kickText}>Kick!</Text>
+          </TouchableOpacity>
 
-      <View style={styles.infoBox}>
-        <Text style={styles.infoIcon}>ℹ️</Text>
-        <Text style={styles.infoText}>
-          You only have to count 10 kicks continuously. Feel free to leave the app and come back when you feel another kick.
-        </Text>
-      </View>
+          {kickCount > 0 && (
+            <TouchableOpacity style={styles.undoButton} onPress={handleUndo}>
+              <Text style={styles.undoText}>Undo Last Kick</Text>
+            </TouchableOpacity>
+          )}
+
+          {kickCount >= 10 && (
+            <TouchableOpacity style={styles.finishButton} onPress={handleFinish}>
+              <Text style={styles.finishText}>Finish Session</Text>
+            </TouchableOpacity>
+          )}
+
+          <View style={styles.infoBox}>
+            <Text style={styles.infoIcon}>ℹ️</Text>
+            <Text style={styles.infoText}>
+              You only have to count 10 fetal movement instances. Feel free to leave the app and come back when you feel another kick.
+            </Text>
+          </View>
+        </>
+      )}
     </SafeAreaView>
   );
 }
@@ -101,7 +151,39 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: '#000',
   },
+  reminderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  reminderTitle: {
+    fontFamily: 'DynaPuff',
+    fontSize: 32,
+    color: '#000',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  reminderText: {
+    fontFamily: 'Roboto',
+    fontSize: 16,
+    color: '#000',
+    textAlign: 'center',
+    marginBottom: 32,
+  },
+  startButton: {
+    padding: 16,
+    borderRadius: 25,
+    backgroundColor: '#687353',
+    alignItems: 'center',
+  },
+  startButtonText: {
+    fontFamily: 'DynaPuff',
+    fontSize: 24,
+    color: '#FFF',
+  },
   cardsContainer: {
+    marginTop: 128,
     padding: 32,
     gap: 16,
     flexWrap: 'wrap',
@@ -109,7 +191,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   card: {
-    width: 116,
     padding: 16,
     borderRadius: 15,
     borderWidth: 2,
@@ -152,18 +233,43 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   kickButton: {
-    width: 151,
-    height: 105,
+    padding: 32,
     borderRadius: 43,
     backgroundColor: '#687353',
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
-    marginVertical: 27.5,
+    marginVertical: 64,
   },
   kickText: {
     fontFamily: 'DynaPuff',
     fontSize: 41,
+    color: '#FFF',
+  },
+  undoButton: {
+    padding: 16,
+    borderRadius: 15,
+    backgroundColor: '#FFD700',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginVertical: 16,
+  },
+  undoText: {
+    fontFamily: 'DynaPuff',
+    fontSize: 20,
+    color: '#000',
+  },
+  finishButton: {
+    padding: 16,
+    borderRadius: 25,
+    backgroundColor: '#687353',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginVertical: 16,
+  },
+  finishText: {
+    fontFamily: 'DynaPuff',
+    fontSize: 24,
     color: '#FFF',
   },
   infoBox: {

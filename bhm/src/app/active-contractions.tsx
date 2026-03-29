@@ -2,12 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { DeviceMotion } from 'expo-sensors';
 
 export default function ActiveContractions() {
   const router = useRouter();
   const [contractions, setContractions] = useState<number[]>([]);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
+  const [isAtRest, setIsAtRest] = useState(true);
+  const [flexCalibrated, setFlexCalibrated] = useState(false);
+  const [contractionDurations, setContractionDurations] = useState<number[]>([]);
+  const [trueContractions, setTrueContractions] = useState<number[]>([]);
+  const [totalTrueTime, setTotalTrueTime] = useState(0);
+  const [currentContractionStart, setCurrentContractionStart] = useState<number | null>(null);
+  const [calibrating, setCalibrating] = useState(true);
 
   useEffect(() => {
     if (startTime) {
@@ -18,12 +26,56 @@ export default function ActiveContractions() {
     }
   }, [startTime]);
 
+  useEffect(() => {
+    let subscription: any;
+    const startMotionMonitoring = async () => {
+      const { status } = await DeviceMotion.requestPermissionsAsync();
+      if (status === 'granted') {
+        await DeviceMotion.setUpdateInterval(1000);
+        subscription = DeviceMotion.addListener((motionData) => {
+          const { rotation } = motionData;
+          // Check if device is tilted (rotation beta > 0.3 radians ~17 degrees)
+          const tilted = Math.abs(rotation?.beta || 0) > 0.3 || Math.abs(rotation?.gamma || 0) > 0.3;
+          setIsAtRest(!tilted);
+        });
+      }
+    };
+    if (startTime) {
+      startMotionMonitoring();
+    }
+    return () => {
+      if (subscription) {
+        subscription.remove();
+      }
+    };
+  }, [startTime]);
+
   const handleContraction = () => {
     const now = Date.now();
     if (!startTime) {
       setStartTime(now);
     }
-    setContractions(prev => [...prev, now]);
+    if (currentContractionStart) {
+      // End current contraction
+      const duration = now - currentContractionStart;
+      setContractionDurations(prev => [...prev, duration]);
+      setContractions(prev => [...prev, now]);
+      // Classify
+      const isTrue = classifyContraction(duration, contractions.length > 0 ? now - contractions[contractions.length - 1] : 0);
+      if (isTrue) {
+        setTrueContractions(prev => [...prev, now]);
+        setTotalTrueTime(prev => prev + duration);
+      }
+      setCurrentContractionStart(null);
+    } else {
+      // Start new contraction
+      setCurrentContractionStart(now);
+    }
+  };
+
+  const classifyContraction = (duration: number, interval: number) => {
+    // Simple classification: true if duration > 30s and interval < 5min
+    return duration > 30000 && (interval === 0 || interval < 300000);
   };
 
   const formatTime = (ms: number) => {
@@ -68,61 +120,74 @@ export default function ActiveContractions() {
           <Text style={styles.closeText}>✕</Text>
         </TouchableOpacity>
 
-        {/* Contractions Counter */}
-        <View style={styles.counterContainer}>
-          <View style={styles.box}>
-            <Text style={styles.number}>{contractions.length}</Text>
-            <Text style={styles.label}>/10</Text>
-            <Text style={styles.subLabel}>Contractions</Text>
+        {calibrating ? (
+          <View style={styles.calibrationContainer}>
+            <Text style={styles.calibrationTitle}>Calibrate Flex Sensor</Text>
+            <Text style={styles.calibrationText}>Please ensure the flex sensor is properly attached and relaxed.</Text>
+            <TouchableOpacity style={styles.calibrateButton} onPress={() => setCalibrating(false)}>
+              <Text style={styles.calibrateButtonText}>Calibrate</Text>
+            </TouchableOpacity>
           </View>
-          <View style={styles.box}>
-            <Text style={styles.number}>{formatTime(elapsedTime)}</Text>
-            <Text style={styles.subLabel}>Elapsed Time</Text>
-          </View>
-          <View style={styles.box}>
-            <Text style={styles.number}>{formatTime(averageTime())}</Text>
-            <Text style={styles.subLabel}>Average Time Between Each Contraction</Text>
-          </View>
-        </View>
+        ) : (
+          <>
+            {/* Rest Warning */}
+            {!isAtRest && (
+              <View style={styles.warningContainer}>
+                <Text style={styles.warningText}>⚠️ Please remain at rest. Do not tilt your body.</Text>
+              </View>
+            )}
 
-        {/* Not in Labor Button */}
-        <TouchableOpacity style={styles.notInLaborButton} onPress={handleNotInLabor}>
-          <Text style={styles.notInLaborText}>Not in Labor</Text>
-        </TouchableOpacity>
+            {/* Contractions Counter */}
+            <View style={styles.counterContainer}>
+              <View style={styles.box}>
+                <Text style={styles.number}>{contractions.length}</Text>
+                <Text style={styles.label}>/10</Text>
+                <Text style={styles.subLabel}>Contractions</Text>
+              </View>
+              <View style={styles.box}>
+                <Text style={styles.number}>{formatTime(elapsedTime)}</Text>
+                <Text style={styles.subLabel}>Elapsed Time</Text>
+              </View>
+              <View style={styles.box}>
+                <Text style={styles.number}>{formatTime(averageTime())}</Text>
+                <Text style={styles.subLabel}>Average Time Between Each Contraction</Text>
+              </View>
+              <View style={styles.box}>
+                <Text style={styles.number}>{trueContractions.length}</Text>
+                <Text style={styles.subLabel}>True Contractions</Text>
+              </View>
+              <View style={styles.box}>
+                <Text style={styles.number}>{formatTime(totalTrueTime)}</Text>
+                <Text style={styles.subLabel}>Total True Contraction Time</Text>
+              </View>
+            </View>
 
-        {/* Contraction Button - Implicit, user taps anywhere or specific area */}
-        <TouchableOpacity style={styles.contractionButton} onPress={handleContraction}>
-          <Text style={styles.contractionText}>Tap to Record Contraction</Text>
-        </TouchableOpacity>
+            {/* Not in Labor Button */}
+            <TouchableOpacity style={styles.notInLaborButton} onPress={handleNotInLabor}>
+              <Text style={styles.notInLaborText}>Not in Labor</Text>
+            </TouchableOpacity>
 
-        {/* End Session */}
-        <View style={styles.endSessionContainer}>
-          <TouchableOpacity onPress={handleEndSession}>
-            <Text style={styles.endSessionText}>End Session</Text>
-          </TouchableOpacity>
-          <View style={styles.infoContainer}>
-            <Text style={styles.infoIcon}>ℹ️</Text>
-            <Text style={styles.infoText}>
-              This will end your current session and will make you lose the current statistics.
-            </Text>
-          </View>
-        </View>
+            {/* Contraction Button */}
+            <TouchableOpacity style={styles.contractionButton} onPress={handleContraction}>
+              <Text style={styles.contractionText}>
+                {currentContractionStart ? 'End Contraction' : 'Start Contraction'}
+              </Text>
+            </TouchableOpacity>
 
-        {/* Navbar */}
-        <View style={styles.navbar}>
-          <TouchableOpacity style={styles.navItem}>
-            <Text style={styles.navIcon}>🏠</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
-            <Text style={styles.navIcon}>👶</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
-            <Text style={styles.navIcon}>⏰</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
-            <Text style={styles.navIcon}>👤</Text>
-          </TouchableOpacity>
-        </View>
+            {/* End Session */}
+            <View style={styles.endSessionContainer}>
+              <TouchableOpacity onPress={handleEndSession}>
+                <Text style={styles.endSessionText}>End Session</Text>
+              </TouchableOpacity>
+              <View style={styles.infoContainer}>
+                <Text style={styles.infoIcon}>ℹ️</Text>
+                <Text style={styles.infoText}>
+                  This will end your current session and will make you lose the current statistics.
+                </Text>
+              </View>
+            </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -151,6 +216,51 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#000',
   },
+  calibrationContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  calibrationTitle: {
+    fontFamily: 'DynaPuff',
+    fontSize: 32,
+    color: '#000',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  calibrationText: {
+    fontFamily: 'Roboto',
+    fontSize: 16,
+    color: '#000',
+    textAlign: 'center',
+    marginBottom: 32,
+  },
+  calibrateButton: {
+    padding: 16,
+    borderRadius: 25,
+    backgroundColor: '#4C211E',
+    alignItems: 'center',
+  },
+  calibrateButtonText: {
+    fontFamily: 'DynaPuff',
+    fontSize: 24,
+    color: '#FFF',
+  },
+  warningContainer: {
+    backgroundColor: '#FFD700',
+    padding: 16,
+    borderRadius: 15,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#000',
+  },
+  warningText: {
+    fontFamily: 'Roboto',
+    fontSize: 16,
+    color: '#000',
+    textAlign: 'center',
+  },
   counterContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -161,11 +271,11 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   box: {
-    width: 116,
     padding: 16,
     flexDirection: 'column',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: "space-evenly",
+    gap: 4,
     borderRadius: 15,
     borderWidth: 2,
     borderColor: '#000',
