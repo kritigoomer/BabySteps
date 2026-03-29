@@ -7,22 +7,27 @@ import {
   View,
   ScrollView,
 } from 'react-native';
+import { defaultUserStats, defaultKickSessions, defaultContractionSessions } from '../../constants/dataTypes';
 
 export default function AccountScreen() {
+  const userStats = defaultUserStats;
+  const kickSessions = defaultKickSessions.slice(0, 2); // Show last 2
+  const contractionSessions = defaultContractionSessions.slice(0, 2); // Show last 2
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent} // 2. Added container style
         showsVerticalScrollIndicator={false}
       >
       <View style={styles.profileSection}>
         <View style={styles.profileImage} />
         <View style={styles.profileInfo}>
-          <Text style={styles.name}>First Last Name</Text>
-          <Text style={styles.age}>39 years old</Text>
+          <Text style={styles.name}>{userStats.name}</Text>
+          <Text style={styles.age}>{userStats.age} years old</Text>
           <View style={styles.details}>
-            <Text style={styles.detail}>Twins</Text>
-            <Text style={styles.detail}>29 weeks in</Text>
+            <Text style={styles.detail}>{userStats.expectingTwins ? 'Twins' : 'Single'}</Text>
+            <Text style={styles.detail}>{userStats.weeksPregnant} weeks in</Text>
           </View>
         </View>
         <TouchableOpacity style={styles.editButton}>
@@ -45,24 +50,22 @@ export default function AccountScreen() {
         <Text style={styles.logsTitle}>Recent Logs</Text>
         <View style={styles.logsContainer}>
           <Text style={styles.sectionTitle}>Contractions</Text>
-          <View style={styles.logItem}>
-            <Text style={styles.logDate}>2024-03-28</Text>
-            <Text style={styles.logDetails}>Duration: 1h 15m | True: 5 | Total: 45m</Text>
-          </View>
-          <View style={styles.logItem}>
-            <Text style={styles.logDate}>2024-03-27</Text>
-            <Text style={styles.logDetails}>Duration: 1h 0m | True: 3 | Total: 30m</Text>
-          </View>
+          {contractionSessions.map((session, index) => (
+            <View key={`contraction-${index}`} style={styles.logItem}>
+              <Text style={styles.logDate}>{session.date}</Text>
+              <Text style={styles.logDetails}>
+                Duration: {Math.floor(session.durationMinutes / 60)}h {session.durationMinutes % 60}m | True: {session.trueContractions} | Total: {session.totalTrueTimeMinutes}m
+              </Text>
+            </View>
+          ))}
 
           <Text style={styles.sectionTitle}>Kicks</Text>
-          <View style={styles.logItem}>
-            <Text style={styles.logDate}>2024-03-28</Text>
-            <Text style={styles.logDetails}>Count: 10 | Avg: 12 min</Text>
-          </View>
-          <View style={styles.logItem}>
-            <Text style={styles.logDate}>2024-03-27</Text>
-            <Text style={styles.logDetails}>Count: 10 | Avg: 10 min</Text>
-          </View>
+          {kickSessions.map((session, index) => (
+            <View key={`kick-${index}`} style={styles.logItem}>
+              <Text style={styles.logDate}>{session.date}</Text>
+              <Text style={styles.logDetails}>Count: {session.count} | Avg: {session.averageMinutes} min</Text>
+            </View>
+          ))}
         </View>
       </View>
       </ScrollView>

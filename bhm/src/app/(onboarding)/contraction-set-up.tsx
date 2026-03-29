@@ -20,7 +20,7 @@ export default function ContractionSetUpScreen() {
         style={styles.inner}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.content}>
-          <Text style={styles.title}>Contraction Observation Set-Up</Text>
+          <Text style={styles.pageTitle}>Contraction Observation Set-Up</Text>
 
           <View style={styles.questionContainer}>
             <Text style={styles.question}>Have you had any contractions?</Text>
@@ -132,5 +132,13 @@ const styles = StyleSheet.create({
   navArrow: {
     fontSize: 24,
     color: '#FFF2E8',
+  },
+  pageTitle: {
+    fontFamily: 'DynaPuff',
+    fontSize: 32,
+    color: '#687353',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 16,
   },
 });

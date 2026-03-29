@@ -33,6 +33,8 @@ export default function ContractionsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
+        <Text style={styles.pageTitle}>Contractions</Text>
+
         <Text style={styles.question}>How long should this session be?</Text>
 
         <View style={styles.options}>
@@ -119,6 +121,13 @@ const styles = StyleSheet.create({
     color: '#000',
     textAlign: 'center',
     marginBottom: 16,
+  },
+  pageTitle: {
+    fontFamily: 'DynaPuff',
+    fontSize: 32,
+    color: '#4C211E',
+    textAlign: 'center',
+    marginBottom: 32,
   },
   options: {
     alignItems: 'center',

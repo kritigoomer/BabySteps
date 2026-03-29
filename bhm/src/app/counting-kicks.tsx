@@ -72,6 +72,8 @@ export default function CountingKicksScreen() {
         <Text style={styles.closeText}>✕</Text>
       </TouchableOpacity>
 
+      <Text style={styles.pageTitle}>Counting Kicks</Text>
+
       {showPositionReminder ? (
         <View style={styles.reminderContainer}>
           <Text style={styles.reminderTitle}>Get into position</Text>
@@ -292,5 +294,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Roboto',
     fontSize: 12,
     color: '#000',
+  },
+  pageTitle: {
+    fontFamily: 'DynaPuff',
+    fontSize: 32,
+    color: '#687353',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 16,
   },
 });

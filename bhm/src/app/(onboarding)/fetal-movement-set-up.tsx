@@ -25,7 +25,7 @@ export default function FetalMovementSetUpScreen() {
         style={styles.inner}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Text style={styles.title}>Fetal Movement Log Set-Up</Text>
+          <Text style={styles.pageTitle}>Fetal Movement Log Set-Up</Text>
 
           <View style={styles.questionContainer}>
             <Text style={styles.question}>Are you expecting twins or more?</Text>
@@ -250,5 +250,13 @@ const styles = StyleSheet.create({
   navArrow: {
     fontSize: 24,
     color: '#FFF2E8',
+  },
+  pageTitle: {
+    fontFamily: 'DynaPuff',
+    fontSize: 32,
+    color: '#687353',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 16,
   },
 });

@@ -4,6 +4,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { DeviceMotion } from 'expo-sensors';
 
+const IP = process.env.IP;
+
 export default function ActiveContractions() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -93,7 +95,7 @@ export default function ActiveContractions() {
 
   // WEBSOCKET
   useEffect(() => {
-    const socket = new WebSocket("ws://192.168.4.137:3000");
+    const socket = new WebSocket(`ws://${IP}:3000`);
 
     socket.onopen = () => console.log("Connected to backend");
 
@@ -217,6 +219,8 @@ export default function ActiveContractions() {
         <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
           <Text style={styles.closeText}>✕</Text>
         </TouchableOpacity>
+
+        <Text style={styles.pageTitle}>Active Contractions</Text>
 
         {calibrating ? (
           <View style={styles.calibrationContainer}>
@@ -485,5 +489,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Roboto',
     fontSize: 12,
     color: '#000',
+  },
+  pageTitle: {
+    fontFamily: 'DynaPuff',
+    fontSize: 32,
+    color: '#687353',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 16,
   },
 })

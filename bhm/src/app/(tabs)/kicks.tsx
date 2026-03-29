@@ -8,32 +8,55 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { defaultKickSessions, defaultUserStats, KickSession } from '../../constants/dataTypes';
 
 export default function KicksScreen() {
   const router = useRouter();
-  // Placeholder for stored data
-  const lastAverage = 11; // Would be loaded from storage
-  const currentAverage = 11; // Would be calculated
+
+  // Load data from database/storage (using defaults for now)
+  const kickSessions: KickSession[] = defaultKickSessions;
+  const userStats = defaultUserStats;
+
+  // Calculate current stats
+  const lastSession = kickSessions[0]; // Most recent
+  const previousSession = kickSessions[1]; // Second most recent
+
+  const currentAverage = lastSession ? lastSession.averageMinutes : 0;
+  const lastAverage = previousSession ? previousSession.averageMinutes : currentAverage;
   const comparison = currentAverage > lastAverage ? 'increased' : currentAverage < lastAverage ? 'decreased' : 'same';
-  const logs = [
-    { date: '2024-03-28', average: 12, count: 10 },
-    { date: '2024-03-27', average: 10, count: 10 },
-    { date: '2024-03-26', average: 11, count: 10 },
-  ];
+
+  // Format logs for display
+  const logs = kickSessions.map(session => ({
+    date: session.date,
+    average: session.averageMinutes,
+    count: session.count,
+  }));
+
+  // Calculate display values
+  const lastActiveTime = lastSession ? new Date(lastSession.startTime).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  }).toLowerCase().replace(' ', '') : 'this morning';
+
+  const activeTimeRange = `${userStats.activeTimeStart}-${userStats.activeTimeEnd}`;
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.cardsContainer}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.pageTitle}>Kicks</Text>
+
+        <View style={styles.cardsContainer}>
         <View style={styles.timeCard}>
           <Text style={styles.cardNumber}>{currentAverage}</Text>
           <Text style={styles.cardLabel}>Average Mins Between Kicks</Text>
         </View>
         <View style={styles.card}>
-          <Text style={styles.cardText}>this morning</Text>
+          <Text style={styles.cardText}>{lastActiveTime}</Text>
           <Text style={styles.cardLabel}>Last Active</Text>
         </View>
         <View style={styles.wideCard}>
-          <Text style={styles.wideCardText}>11AM-1PM</Text>
+          <Text style={styles.wideCardText}>{activeTimeRange}</Text>
           <Text style={styles.cardLabel}>Your baby is most active</Text>
         </View>
         <View style={styles.compCard}>
@@ -74,6 +97,7 @@ export default function KicksScreen() {
           ))}
         </ScrollView>
       </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -90,6 +114,9 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     flexDirection: 'row',
     justifyContent: 'center',
+  },
+  scrollContent: {
+    paddingBottom: 120, // space for navigation
   },
   timeCard: {
     maxWidth: 128,
@@ -217,5 +244,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Roboto',
     fontSize: 14,
     color: '#687353',
+  },
+  pageTitle: {
+    fontFamily: 'DynaPuff',
+    fontSize: 32,
+    color: '#687353',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 16,
   },
 });

@@ -25,7 +25,7 @@ export default function GettingToKnowYouScreen() {
         style={styles.inner}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.content}>
-          <Text style={styles.title}>Getting to Know You</Text>
+          <Text style={styles.pageTitle}>Getting to Know You</Text>
 
           <View style={styles.questionContainer}>
             <Text style={styles.question}>What can we call you?</Text>
@@ -222,5 +222,13 @@ const styles = StyleSheet.create({
   nextArrow: {
     fontSize: 24,
     color: '#FFF2E8',
+  },
+  pageTitle: {
+    fontFamily: 'DynaPuff',
+    fontSize: 32,
+    color: '#687353',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 16,
   },
 });
