@@ -79,6 +79,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40, // Ensures content doesn't hug the bottom of the screen
   },
   profileSection: {
+    marginTop: 64,
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 32,

@@ -24,7 +24,7 @@ export default function KicksScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.cardsContainer}>
-        <View style={styles.card}>
+        <View style={styles.timeCard}>
           <Text style={styles.cardNumber}>{currentAverage}</Text>
           <Text style={styles.cardLabel}>Average Mins Between Kicks</Text>
         </View>
@@ -84,13 +84,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
   },
-  card: {
+  timeCard: {
     maxWidth: 128,
     padding: 16,
     borderRadius: 15,
     borderWidth: 2,
     borderColor: '#687353',
     backgroundColor: '#BDCAA5',
+    alignItems: 'center',
+    gap: 8,
+  },
+  card: {
+    padding: 16,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: '#687353',
+    backgroundColor: '#BDCAA5',
+    justifyContent: "space-evenly",
     alignItems: 'center',
     gap: 8,
   },

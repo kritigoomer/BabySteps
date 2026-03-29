@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   box: {
-    padding: 12,
+    padding: 16,
     flexDirection: 'column',
     alignItems: 'center',
     gap: 4,
