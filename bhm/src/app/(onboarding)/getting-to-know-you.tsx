@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -16,6 +17,7 @@ export default function GettingToKnowYouScreen() {
   const [name, setName] = useState('Serena Williams');
   const [age, setAge] = useState('39');
   const [isPregnant, setIsPregnant] = useState(true);
+  const [showAgeDropdown, setShowAgeDropdown] = useState(false);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -37,18 +39,29 @@ export default function GettingToKnowYouScreen() {
 
           <View style={styles.questionContainer}>
             <Text style={styles.question}>How old are you?</Text>
-            <View style={styles.ageInputContainer}>
-              <TextInput
-                style={styles.ageInput}
-                value={age}
-                onChangeText={setAge}
-                keyboardType="numeric"
-                placeholderTextColor="#4C211E"
-              />
+            <TouchableOpacity style={styles.ageInputContainer} onPress={() => setShowAgeDropdown(!showAgeDropdown)}>
+              <Text style={styles.ageInput}>{age}</Text>
               <View style={styles.dropdownArrow}>
-                <Text style={styles.arrowText}>▼</Text>
+                <Text style={styles.arrowText}>{showAgeDropdown ? '▲' : '▼'}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
+            {showAgeDropdown && (
+              <View style={styles.dropdownContainer}>
+                <ScrollView style={styles.dropdownScroll}>
+                  {Array.from({ length: 51 }, (_, i) => i + 15).map((ageOption) => (
+                    <TouchableOpacity
+                      key={ageOption}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setAge(ageOption.toString());
+                        setShowAgeDropdown(false);
+                      }}>
+                      <Text style={styles.dropdownItemText}>{ageOption}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
           </View>
 
           <View style={styles.questionContainer}>
@@ -140,6 +153,32 @@ const styles = StyleSheet.create({
   },
   arrowText: {
     fontSize: 12,
+    color: '#4C211E',
+  },
+  dropdownContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFF2E8',
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#4C211E',
+    maxHeight: 150,
+    zIndex: 1,
+  },
+  dropdownScroll: {
+    maxHeight: 150,
+  },
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#4C211E',
+  },
+  dropdownItemText: {
+    fontFamily: 'DynaPuff',
+    fontSize: 16,
     color: '#4C211E',
   },
   pregnantButtons: {

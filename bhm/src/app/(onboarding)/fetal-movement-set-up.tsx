@@ -7,7 +7,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -15,8 +14,10 @@ import {
 export default function FetalMovementSetUpScreen() {
   const router = useRouter();
   const [isTwins, setIsTwins] = useState(true);
-  const [weeks, setWeeks] = useState('28 weeks');
+  const [weeks, setWeeks] = useState('28');
   const [activeTime, setActiveTime] = useState('11a-1p');
+  const [showWeeksDropdown, setShowWeeksDropdown] = useState(false);
+  const [showActiveTimeDropdown, setShowActiveTimeDropdown] = useState(false);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -46,32 +47,59 @@ export default function FetalMovementSetUpScreen() {
           <View style={styles.questionContainer}>
             <Text style={styles.question}>How many weeks along are you?</Text>
             <Text style={styles.note}>*kicks start around 28 weeks for most women</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                value={weeks}
-                onChangeText={setWeeks}
-                placeholderTextColor="#4C211E"
-              />
+            <TouchableOpacity style={styles.inputContainer} onPress={() => setShowWeeksDropdown(!showWeeksDropdown)}>
+              <Text style={styles.input}>{weeks} weeks</Text>
               <View style={styles.dropdownArrow}>
-                <Text style={styles.arrowText}>▼</Text>
+                <Text style={styles.arrowText}>{showWeeksDropdown ? '▲' : '▼'}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
+            {showWeeksDropdown && (
+              <View style={styles.dropdownContainer}>
+                <ScrollView style={styles.dropdownScroll}>
+                  {Array.from({ length: 21 }, (_, i) => i + 20).map((weekOption) => (
+                    <TouchableOpacity
+                      key={weekOption}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setWeeks(weekOption.toString());
+                        setShowWeeksDropdown(false);
+                      }}>
+                      <Text style={styles.dropdownItemText}>{weekOption} weeks</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
           </View>
 
           <View style={styles.questionContainer}>
             <Text style={styles.question}>What times is your baby the most active?</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                value={activeTime}
-                onChangeText={setActiveTime}
-                placeholderTextColor="#4C211E"
-              />
+            <TouchableOpacity style={styles.inputContainer} onPress={() => setShowActiveTimeDropdown(!showActiveTimeDropdown)}>
+              <Text style={styles.input}>{activeTime}</Text>
               <View style={styles.dropdownArrow}>
-                <Text style={styles.arrowText}>▼</Text>
+                <Text style={styles.arrowText}>{showActiveTimeDropdown ? '▲' : '▼'}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
+            {showActiveTimeDropdown && (
+              <View style={styles.dropdownContainer}>
+                <ScrollView style={styles.dropdownScroll}>
+                  {[
+                    '12a-2a', '2a-4a', '4a-6a', '6a-8a', '8a-10a', '10a-12p',
+                    '12p-2p', '2p-4p', '4p-6p', '6p-8p', '8p-10p', '10p-12a'
+                  ].map((timeOption) => (
+                    <TouchableOpacity
+                      key={timeOption}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setActiveTime(timeOption);
+                        setShowActiveTimeDropdown(false);
+                      }}>
+                      <Text style={styles.dropdownItemText}>{timeOption}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
           </View>
         </ScrollView>
 
@@ -175,6 +203,32 @@ const styles = StyleSheet.create({
   },
   arrowText: {
     fontSize: 12,
+    color: '#4C211E',
+  },
+  dropdownContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFF2E8',
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#4C211E',
+    maxHeight: 150,
+    zIndex: 1,
+  },
+  dropdownScroll: {
+    maxHeight: 150,
+  },
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#4C211E',
+  },
+  dropdownItemText: {
+    fontFamily: 'DynaPuff',
+    fontSize: 16,
     color: '#4C211E',
   },
   navigation: {

@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import {
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -14,6 +15,11 @@ export default function KicksScreen() {
   const lastAverage = 11; // Would be loaded from storage
   const currentAverage = 11; // Would be calculated
   const comparison = currentAverage > lastAverage ? 'increased' : currentAverage < lastAverage ? 'decreased' : 'same';
+  const logs = [
+    { date: '2024-03-28', average: 12, count: 10 },
+    { date: '2024-03-27', average: 10, count: 10 },
+    { date: '2024-03-26', average: 11, count: 10 },
+  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -48,6 +54,18 @@ export default function KicksScreen() {
             Fetuses are most active in the evening around 1 hour after their mother eats.
           </Text>
         </View>
+      </View>
+
+      <View style={styles.logsSection}>
+        <Text style={styles.logsTitle}>Recent Logs</Text>
+        <ScrollView style={styles.logsScroll}>
+          {logs.map((log, index) => (
+            <View key={index} style={styles.logItem}>
+              <Text style={styles.logDate}>{log.date}</Text>
+              <Text style={styles.logDetails}>Count: {log.count} | Avg: {log.average} min</Text>
+            </View>
+          ))}
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
@@ -138,5 +156,35 @@ const styles = StyleSheet.create({
     fontFamily: 'Roboto',
     fontSize: 12,
     color: '#000',
+  },
+  logsSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  logsTitle: {
+    fontFamily: 'DynaPuff',
+    fontSize: 24,
+    color: '#687353',
+    marginBottom: 8,
+  },
+  logsScroll: {
+    maxHeight: 200,
+  },
+  logItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#BDCAA5',
+  },
+  logDate: {
+    fontFamily: 'Roboto',
+    fontSize: 16,
+    color: '#000',
+  },
+  logDetails: {
+    fontFamily: 'Roboto',
+    fontSize: 14,
+    color: '#687353',
   },
 });

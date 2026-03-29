@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -13,7 +14,22 @@ export default function ContractionsScreen() {
   const router = useRouter();
   const [sessionLength, setSessionLength] = useState('1');
   const [customTime, setCustomTime] = useState('');
+  const logs = [
+    { date: '2024-03-28', duration: '1h 15m', trueContractions: 5, totalTime: '45m' },
+    { date: '2024-03-27', duration: '1h 0m', trueContractions: 3, totalTime: '30m' },
+    { date: '2024-03-26', duration: '1h 30m', trueContractions: 7, totalTime: '50m' },
+  ];
 
+  const startArduinoSession = async (durationMs: number) => {
+  try {
+    await fetch(`http://192.168.4.137:3000/start-session?duration=${durationMs}`);
+    console.log(`✅ Session started — duration: ${durationMs} ms`);
+  } catch (err) {
+    console.log("Failed to start session:", err);
+    // Still continue to the active screen even if the request fails
+  }
+};
+  
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -23,7 +39,7 @@ export default function ContractionsScreen() {
           <TouchableOpacity
             style={[styles.option, sessionLength === '1' && styles.optionSelected]}
             onPress={() => setSessionLength('1')}>
-            <Text style={styles.optionText}>1 hour (recommended)</Text>
+            <Text style={[styles.optionText, sessionLength === '1' && styles.optionTextSelected]}>1 hour (recommended)</Text>
           </TouchableOpacity>
 
           <View style={styles.infoRow}>
@@ -50,7 +66,17 @@ export default function ContractionsScreen() {
 
         <TouchableOpacity
           style={styles.beginButton}
-          onPress={() => router.push('/active-contractions')}>
+          onPress={async () => {
+            const durationMs = parseFloat(sessionLength) * 3600000;
+            // 🔥 FIRST-TIME LOGIC — now happens right here on the Begin button
+            await startArduinoSession(durationMs);
+            // Then navigate to the active contractions screen
+            router.push({
+              pathname: '/active-contractions',
+              params: { sessionLength: durationMs },
+            });
+          }}
+        >
           <Text style={styles.beginButtonText}>Begin Contractions</Text>
         </TouchableOpacity>
 
@@ -59,6 +85,18 @@ export default function ContractionsScreen() {
           <Text style={styles.finalInfoText}>
             Please ensure you remain in a stable/upright position. Do not tilt your body. Lay flat or sit in a relaxed, upright manner.
           </Text>
+        </View>
+
+        <View style={styles.logsSection}>
+          <Text style={styles.logsTitle}>Recent Logs</Text>
+          <ScrollView style={styles.logsScroll}>
+            {logs.map((log, index) => (
+              <View key={index} style={styles.logItem}>
+                <Text style={styles.logDate}>{log.date}</Text>
+                <Text style={styles.logDetails}>Duration: {log.duration} | True: {log.trueContractions} | Total: {log.totalTime}</Text>
+              </View>
+            ))}
+          </ScrollView>
         </View>
       </View>
     </SafeAreaView>
@@ -96,12 +134,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   optionSelected: {
-    // No background, just border
+    backgroundColor: '#4C211E',
   },
   optionText: {
     fontFamily: 'DynaPuff',
     fontSize: 16,
     color: '#000',
+  },
+  optionTextSelected: {
+    color: '#FFF2E8',
   },
   infoRow: {
     flexDirection: 'row',
@@ -162,5 +203,34 @@ const styles = StyleSheet.create({
     fontFamily: 'Roboto',
     fontSize: 12,
     color: '#000',
+  },
+  logsSection: {
+    marginTop: 16,
+  },
+  logsTitle: {
+    fontFamily: 'DynaPuff',
+    fontSize: 24,
+    color: '#4C211E',
+    marginBottom: 8,
+  },
+  logsScroll: {
+    maxHeight: 200,
+  },
+  logItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#FFF',
+  },
+  logDate: {
+    fontFamily: 'Roboto',
+    fontSize: 16,
+    color: '#000',
+  },
+  logDetails: {
+    fontFamily: 'Roboto',
+    fontSize: 14,
+    color: '#4C211E',
   },
 });

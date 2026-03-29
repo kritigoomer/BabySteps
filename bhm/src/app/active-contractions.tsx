@@ -1,99 +1,201 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { DeviceMotion } from 'expo-sensors';
 
 export default function ActiveContractions() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+
+  const sessionLength = params.sessionLength
+    ? parseInt(params.sessionLength as string)
+    : 3600000;
+
   const [contractions, setContractions] = useState<number[]>([]);
+  const [contractionDurations, setContractionDurations] = useState<number[]>([]);
+  const [remainingTime, setRemainingTime] = useState(sessionLength);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [isAtRest, setIsAtRest] = useState(true);
-  const [flexCalibrated, setFlexCalibrated] = useState(false);
-  const [contractionDurations, setContractionDurations] = useState<number[]>([]);
   const [trueContractions, setTrueContractions] = useState<number[]>([]);
   const [totalTrueTime, setTotalTrueTime] = useState(0);
   const [currentContractionStart, setCurrentContractionStart] = useState<number | null>(null);
+  const [laborStatus, setLaborStatus] = useState('not_in_labor');
   const [calibrating, setCalibrating] = useState(true);
+  const [calibrationTime, setCalibrationTime] = useState(0);
 
+  // TIMER
   useEffect(() => {
-    if (startTime) {
-      const interval = setInterval(() => {
-        setElapsedTime(Date.now() - startTime);
-      }, 1000);
-      return () => clearInterval(interval);
-    }
+    if (!startTime) return;
+
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      setElapsedTime(elapsed);
+      setRemainingTime(Math.max(0, sessionLength - elapsed));
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, [startTime]);
 
+  // LABOR STATUS
+  useEffect(() => {
+    if (trueContractions.length >= 5) {
+      setLaborStatus('possibly_in_labor');
+    } else {
+      setLaborStatus('not_in_labor');
+    }
+  }, [trueContractions]);
+
+  // CALIBRATION TIMER (FIXED STALE STATE)
+  useEffect(() => {
+    if (!calibrating) return;
+
+    const interval = setInterval(() => {
+      setCalibrationTime(prev => {
+        if (prev >= 5) {
+          setCalibrating(false);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [calibrating]);
+
+  // DEVICE MOTION
   useEffect(() => {
     let subscription: any;
+
     const startMotionMonitoring = async () => {
       const { status } = await DeviceMotion.requestPermissionsAsync();
       if (status === 'granted') {
         await DeviceMotion.setUpdateInterval(1000);
+
         subscription = DeviceMotion.addListener((motionData) => {
           const { rotation } = motionData;
-          // Check if device is tilted (rotation beta > 0.3 radians ~17 degrees)
-          const tilted = Math.abs(rotation?.beta || 0) > 0.3 || Math.abs(rotation?.gamma || 0) > 0.3;
+          const tilted =
+            Math.abs(rotation?.beta || 0) > 0.3 ||
+            Math.abs(rotation?.gamma || 0) > 0.3;
+
           setIsAtRest(!tilted);
         });
       }
     };
-    if (startTime) {
-      startMotionMonitoring();
-    }
+
+    if (startTime) startMotionMonitoring();
+
     return () => {
-      if (subscription) {
-        subscription.remove();
-      }
+      if (subscription) subscription.remove();
     };
   }, [startTime]);
 
+  // WEBSOCKET
+  useEffect(() => {
+    const socket = new WebSocket("ws://192.168.4.137:3000");
+
+    socket.onopen = () => console.log("Connected to backend");
+
+    socket.onmessage = (event) => {
+      try {
+        const parsed = JSON.parse(event.data);
+        handleArduinoEvent(parsed);
+      } catch {
+        console.log("Invalid JSON:", event.data);
+      }
+    };
+
+    socket.onerror = (err) => console.log("Socket error:", err);
+
+    return () => socket.close();
+  }, []);
+
+  // ARDUINO HANDLER (FIXED STATE BUG)
+  const handleArduinoEvent = (event: any) => {
+    const now = Date.now();
+
+    if (!startTime) setStartTime(now);
+
+    if (event.event === "contraction_start") {
+      setCurrentContractionStart(now);
+    }
+
+    if (event.event === "contraction_end") {
+      const duration = event.data.duration_sec * 1000;
+
+      setContractions(prev => {
+        const last = prev.length > 0 ? prev[prev.length - 1] : 0;
+        const interval = last ? now - last : 0;
+
+        const isTrue = classifyContraction(duration, interval);
+
+        if (isTrue) {
+          setTrueContractions(t => [...t, now]);
+          setTotalTrueTime(t => t + duration);
+        }
+
+        return [...prev, now];
+      });
+
+      setCurrentContractionStart(null);
+    }
+  };
+
   const handleContraction = () => {
     const now = Date.now();
-    if (!startTime) {
-      setStartTime(now);
-    }
+
+    if (!startTime) setStartTime(now);
+
     if (currentContractionStart) {
-      // End current contraction
       const duration = now - currentContractionStart;
+
       setContractionDurations(prev => [...prev, duration]);
-      setContractions(prev => [...prev, now]);
-      // Classify
-      const isTrue = classifyContraction(duration, contractions.length > 0 ? now - contractions[contractions.length - 1] : 0);
-      if (isTrue) {
-        setTrueContractions(prev => [...prev, now]);
-        setTotalTrueTime(prev => prev + duration);
-      }
+
+      setContractions(prev => {
+        const last = prev.length > 0 ? prev[prev.length - 1] : 0;
+        const interval = last ? now - last : 0;
+
+        const isTrue = classifyContraction(duration, interval);
+
+        if (isTrue) {
+          setTrueContractions(t => [...t, now]);
+          setTotalTrueTime(t => t + duration);
+        }
+
+        return [...prev, now];
+      });
+
       setCurrentContractionStart(null);
     } else {
-      // Start new contraction
       setCurrentContractionStart(now);
     }
   };
 
   const classifyContraction = (duration: number, interval: number) => {
-    // Simple classification: true if duration > 30s and interval < 5min
     return duration > 30000 && (interval === 0 || interval < 300000);
   };
 
   const formatTime = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+
+    return `${h.toString().padStart(2, '0')}:${m
+      .toString()
+      .padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
   const averageTime = () => {
     if (contractions.length < 2) return 0;
+
     const intervals = [];
     for (let i = 1; i < contractions.length; i++) {
       intervals.push(contractions[i] - contractions[i - 1]);
     }
-    const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-    return avg;
+
+    return intervals.reduce((a, b) => a + b, 0) / intervals.length;
   };
 
   const handleEndSession = () => {
@@ -105,10 +207,6 @@ export default function ActiveContractions() {
         { text: 'End', onPress: () => router.back() },
       ]
     );
-  };
-
-  const handleNotInLabor = () => {
-    router.back();
   };
 
   return (
@@ -124,7 +222,11 @@ export default function ActiveContractions() {
           <View style={styles.calibrationContainer}>
             <Text style={styles.calibrationTitle}>Calibrate Flex Sensor</Text>
             <Text style={styles.calibrationText}>Please ensure the flex sensor is properly attached and relaxed.</Text>
-            <TouchableOpacity style={styles.calibrateButton} onPress={() => setCalibrating(false)}>
+            <Text style={styles.calibrationTimer}>{calibrationTime}/5 seconds</Text>
+            <TouchableOpacity 
+              style={[styles.calibrateButton, calibrationTime < 5 && styles.calibrateButtonDisabled]} 
+              onPress={() => calibrationTime >= 5 && setCalibrating(false)}
+              disabled={calibrationTime < 5}>
               <Text style={styles.calibrateButtonText}>Calibrate</Text>
             </TouchableOpacity>
           </View>
@@ -145,8 +247,8 @@ export default function ActiveContractions() {
                 <Text style={styles.subLabel}>Contractions</Text>
               </View>
               <View style={styles.box}>
-                <Text style={styles.number}>{formatTime(elapsedTime)}</Text>
-                <Text style={styles.subLabel}>Elapsed Time</Text>
+                <Text style={styles.number}>{formatTime(remainingTime)}</Text>
+                <Text style={styles.subLabel}>Time Remaining</Text>
               </View>
               <View style={styles.box}>
                 <Text style={styles.number}>{formatTime(averageTime())}</Text>
@@ -162,10 +264,14 @@ export default function ActiveContractions() {
               </View>
             </View>
 
-            {/* Not in Labor Button */}
-            <TouchableOpacity style={styles.notInLaborButton} onPress={handleNotInLabor}>
-              <Text style={styles.notInLaborText}>Not in Labor</Text>
-            </TouchableOpacity>
+            {/* Labor Status */}
+            <View style={{...styles.laborStatusContainer, backgroundColor: laborStatus === 'possibly_in_labor' ? '#FFD700' : '#FFF2E8'}}>
+              <Text style={styles.laborStatusText}>
+                {laborStatus === 'not_in_labor' 
+                  ? 'As of now, you are not in labor.' 
+                  : 'Possibly in labor, visit a hospital.'}
+              </Text>
+            </View>
 
             {/* Contraction Button */}
             <TouchableOpacity style={styles.contractionButton} onPress={handleContraction}>
@@ -234,13 +340,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 16,
+  },
+  calibrationTimer: {
+    fontFamily: 'DynaPuff',
+    fontSize: 24,
+    color: '#000',
+    textAlign: 'center',
+    marginBottom: 16,
   },
   calibrateButton: {
     padding: 16,
     borderRadius: 25,
     backgroundColor: '#4C211E',
     alignItems: 'center',
+  },
+  calibrateButtonDisabled: {
+    backgroundColor: '#CCC',
   },
   calibrateButtonText: {
     fontFamily: 'DynaPuff',
@@ -261,6 +377,21 @@ const styles = StyleSheet.create({
     color: '#000',
     textAlign: 'center',
   },
+  laborStatusContainer: {
+    width: 330,
+    padding: 16,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: '#000',
+    alignItems: 'center',
+    marginBottom: 50,
+  },
+  laborStatusText: {
+    fontFamily: 'DynaPuff',
+    fontSize: 20,
+    color: '#000',
+    textAlign: 'center',
+  },
   counterContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -271,10 +402,9 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   box: {
-    padding: 16,
+    padding: 12,
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: "space-evenly",
     gap: 4,
     borderRadius: 15,
     borderWidth: 2,
@@ -374,4 +504,4 @@ const styles = StyleSheet.create({
   navIcon: {
     fontSize: 24,
   },
-});
+})

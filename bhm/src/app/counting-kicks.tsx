@@ -12,7 +12,7 @@ export default function CountingKicksScreen() {
   const [kickCount, setKickCount] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [averageTime, setAverageTime] = useState(0);
-  const [startTime, setStartTime] = useState(Date.now());
+  const [startTime] = useState(Date.now());
   const [kickTimes, setKickTimes] = useState<number[]>([]);
   const [showPositionReminder, setShowPositionReminder] = useState(true);
   const [history, setHistory] = useState<{date: string, average: number}[]>([]);

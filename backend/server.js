@@ -37,15 +37,65 @@ port.on("error", (err) => {
 // Arduino data → broadcast to your app
 parser.on("data", (line) => {
   const data = line.trim();
-  console.log("Arduino:", data);
+  console.log("RAW:", data);
+
+  let parsed = null;
+
+  // ---- DEMO MODE ----
+  if (data.startsWith("=== Demo:")) {
+    const typeMatch = data.match(/Demo: (.*?) \|/);
+    const durationMatch = data.match(/Duration: ([\d.]+)/);
+    const totalMatch = data.match(/Total labor duration: ([\d.]+)/);
+
+    parsed = {
+      event: "contraction_end",
+      timestamp: Date.now(),
+      data: {
+        duration_sec: durationMatch ? Number(durationMatch[1]) : 0,
+        risk: typeMatch ? typeMatch[1] : "unknown",
+        total_labor_time_min: totalMatch ? Number(totalMatch[1]) : 0
+      }
+    };
+  }
+
+  // ---- REAL MODE START ----
+  else if (data.startsWith("EVENT|start|")) {
+    const parts = data.split("|");
+
+    parsed = {
+      event: "contraction_start",
+      timestamp: Number(parts[2]),
+      data: {}
+    };
+  }
+
+  // ---- REAL MODE END ----
+  else if (data.startsWith("EVENT|end|")) {
+    const parts = data.split("|");
+
+    parsed = {
+      event: "contraction_end",
+      timestamp: Number(parts[2]),
+      data: {
+        duration_sec: Number(parts[3]),
+        risk: parts[4]
+      }
+    };
+  }
+
+  // ignore everything else
+  if (!parsed) return;
+
+  console.log("PARSED:", parsed);
+
+  const json = JSON.stringify(parsed);
 
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
-      client.send(data);
+      client.send(json);
     }
   });
 });
-
 // ✅ NEW: API endpoint to START the session
 app.post("/start-session", (req, res) => {
   const durationMs = req.body.duration || 600000; // default = 10 minutes
@@ -62,6 +112,22 @@ app.post("/start-session", (req, res) => {
     status: "started",
     durationSeconds: durationMs / 1000,
     message: "Session command sent to Arduino",
+  });
+});
+
+app.get("/start-session", (req, res) => {
+  const duration = req.query.duration || 60000;
+
+  const command = `SESSION:${duration}\n`;
+
+  port.write(command, (err) => {
+    if (err) {
+      console.log("Error sending to Arduino:", err);
+      return res.status(500).send("Failed");
+    }
+
+    console.log("🚀 Sent", command.trim());
+    res.send("Session started");
   });
 });
 

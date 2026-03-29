@@ -23,7 +23,7 @@ export default function RemindersSetUpScreen() {
           <Text style={styles.title}>One Last Thing...</Text>
 
           <View style={styles.questionContainer}>
-            <Text style={styles.question}>Would you like to get reminders to track your baby's movements?</Text>
+            <Text style={styles.question}>Would you like to get reminders to track your baby&apos;s movements?</Text>
             <View style={styles.buttons}>
               <TouchableOpacity
                 style={[styles.button, !wantsReminders && styles.buttonSelected]}

@@ -43,7 +43,27 @@ export default function AccountScreen() {
 
       <View style={styles.logsSection}>
         <Text style={styles.logsTitle}>Recent Logs</Text>
-        <View style={styles.logsPlaceholder} />
+        <View style={styles.logsContainer}>
+          <Text style={styles.sectionTitle}>Contractions</Text>
+          <View style={styles.logItem}>
+            <Text style={styles.logDate}>2024-03-28</Text>
+            <Text style={styles.logDetails}>Duration: 1h 15m | True: 5 | Total: 45m</Text>
+          </View>
+          <View style={styles.logItem}>
+            <Text style={styles.logDate}>2024-03-27</Text>
+            <Text style={styles.logDetails}>Duration: 1h 0m | True: 3 | Total: 30m</Text>
+          </View>
+
+          <Text style={styles.sectionTitle}>Kicks</Text>
+          <View style={styles.logItem}>
+            <Text style={styles.logDate}>2024-03-28</Text>
+            <Text style={styles.logDetails}>Count: 10 | Avg: 12 min</Text>
+          </View>
+          <View style={styles.logItem}>
+            <Text style={styles.logDate}>2024-03-27</Text>
+            <Text style={styles.logDetails}>Count: 10 | Avg: 10 min</Text>
+          </View>
+        </View>
       </View>
       </ScrollView>
     </SafeAreaView>
@@ -144,8 +164,33 @@ const styles = StyleSheet.create({
     color: '#000',
     marginBottom: 8,
   },
-  logsPlaceholder: {
-    flex: 1,
-    backgroundColor: '#D9D9D9',
+  logsContainer: {
+    backgroundColor: '#FFF2E8',
+    borderRadius: 10,
+    padding: 16,
+  },
+  sectionTitle: {
+    fontFamily: 'DynaPuff',
+    fontSize: 18,
+    color: '#4C211E',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  logItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#BDCAA5',
+  },
+  logDate: {
+    fontFamily: 'Roboto',
+    fontSize: 14,
+    color: '#000',
+  },
+  logDetails: {
+    fontFamily: 'Roboto',
+    fontSize: 12,
+    color: '#4C211E',
   },
 });
