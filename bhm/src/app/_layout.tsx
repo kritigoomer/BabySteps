@@ -1,16 +1,24 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Stack } from 'expo-router';
 import React from 'react';
-import { useColorScheme } from 'react-native';
+import { useFonts, DynaPuff_400Regular } from '@expo-google-fonts/dynapuff';
+import { Roboto_400Regular } from '@expo-google-fonts/roboto';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    'DynaPuff': DynaPuff_400Regular,
+    'Roboto': Roboto_400Regular,
+  });
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  if (!fontsLoaded) return null;
+  
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(onboarding)" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="counting-kicks" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="active-contractions" options={{ presentation: 'modal' }} />
+    </Stack>
   );
 }

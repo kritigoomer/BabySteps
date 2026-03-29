@@ -1,0 +1,296 @@
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'expo-router';
+import {
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+export default function CountingKicksScreen() {
+  const [kickCount, setKickCount] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [averageTime, setAverageTime] = useState(0);
+  const [startTime] = useState(Date.now());
+  const [kickTimes, setKickTimes] = useState<number[]>([]);
+  const [showPositionReminder, setShowPositionReminder] = useState(true);
+  const [history, setHistory] = useState<{date: string, average: number}[]>([]);
+  const [lastSessionAverage, setLastSessionAverage] = useState<number | null>(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [startTime]);
+
+  useEffect(() => {
+    if (kickTimes.length > 1) {
+      const diffs = [];
+      for (let i = 1; i < kickTimes.length; i++) {
+        diffs.push(kickTimes[i] - kickTimes[i - 1]);
+      }
+      const avg = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+      setAverageTime(Math.floor(avg / 1000));
+    }
+  }, [kickTimes]);
+
+  const handleKick = () => {
+    if (kickCount < 10) {
+      setKickCount(kickCount + 1);
+      setKickTimes([...kickTimes, Date.now()]);
+    }
+  };
+
+  const handleUndo = () => {
+    if (kickCount > 0) {
+      setKickCount(kickCount - 1);
+      setKickTimes(kickTimes.slice(0, -1));
+    }
+  };
+
+  const handleFinish = () => {
+    // Save to history
+    const newHistory = [...history, {date: new Date().toLocaleDateString(), average: averageTime}];
+    setHistory(newHistory);
+    setLastSessionAverage(averageTime);
+    router.push('/(tabs)/kicks');
+  };
+
+  const formatTime = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+  const router = useRouter();
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <TouchableOpacity style={styles.closeButton} onPress={() => router.push('/(tabs)/kicks')}>
+        <Text style={styles.closeText}>✕</Text>
+      </TouchableOpacity>
+
+      {showPositionReminder ? (
+        <View style={styles.reminderContainer}>
+          <Text style={styles.reminderTitle}>Get into position</Text>
+          <Text style={styles.reminderText}>
+            Sit with feet up or lie on side, place hands on stomach
+          </Text>
+          <TouchableOpacity style={styles.startButton} onPress={() => setShowPositionReminder(false)}>
+            <Text style={styles.startButtonText}>Start Counting</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
+          <View style={styles.cardsContainer}>
+            <View style={styles.card}>
+              <View style={styles.cardTop}>
+                <Text style={styles.cardNumber}>{kickCount}</Text>
+                <Text style={styles.cardDenom}>/10</Text>
+              </View>
+              <Text style={styles.cardLabel}>Kick Count</Text>
+            </View>
+            <View style={styles.card}>
+              <Text style={styles.cardTime}>{formatTime(elapsedTime)}</Text>
+              <Text style={styles.cardLabel}>Elapsed Time</Text>
+            </View>
+            <View style={styles.wideCard}>
+              <Text style={styles.cardTime}>{formatTime(averageTime)}</Text>
+              <Text style={styles.cardLabel}>Average Time Between Each Kick</Text>
+            </View>
+            {lastSessionAverage && (
+              <View style={styles.wideCard}>
+                <Text style={styles.cardTime}>{formatTime(lastSessionAverage)}</Text>
+                <Text style={styles.cardLabel}>Last Session Average</Text>
+              </View>
+            )}
+          </View>
+
+          <TouchableOpacity style={styles.kickButton} onPress={handleKick}>
+            <Text style={styles.kickText}>Kick!</Text>
+          </TouchableOpacity>
+
+          {kickCount > 0 && (
+            <TouchableOpacity style={styles.undoButton} onPress={handleUndo}>
+              <Text style={styles.undoText}>Undo Last Kick</Text>
+            </TouchableOpacity>
+          )}
+
+          {kickCount >= 10 && (
+            <TouchableOpacity style={styles.finishButton} onPress={handleFinish}>
+              <Text style={styles.finishText}>Finish Session</Text>
+            </TouchableOpacity>
+          )}
+
+          <View style={styles.infoBox}>
+            <Text style={styles.infoIcon}>ℹ️</Text>
+            <Text style={styles.infoText}>
+              You only have to count 10 fetal movement instances. Feel free to leave the app and come back when you feel another kick.
+            </Text>
+          </View>
+        </>
+      )}
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#BDCAA5',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 56,
+    left: 32,
+    zIndex: 1,
+  },
+  closeText: {
+    fontSize: 32,
+    color: '#000',
+  },
+  reminderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  reminderTitle: {
+    fontFamily: 'DynaPuff',
+    fontSize: 32,
+    color: '#000',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  reminderText: {
+    fontFamily: 'Roboto',
+    fontSize: 16,
+    color: '#000',
+    textAlign: 'center',
+    marginBottom: 32,
+  },
+  startButton: {
+    padding: 16,
+    borderRadius: 25,
+    backgroundColor: '#687353',
+    alignItems: 'center',
+  },
+  startButtonText: {
+    fontFamily: 'DynaPuff',
+    fontSize: 24,
+    color: '#FFF',
+  },
+  cardsContainer: {
+    marginTop: 128,
+    padding: 32,
+    gap: 16,
+    flexWrap: 'wrap',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  card: {
+    padding: 16,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: '#000',
+    alignItems: 'center',
+    gap: 8,
+  },
+  cardTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  cardNumber: {
+    fontFamily: 'DynaPuff',
+    fontSize: 24,
+    color: '#000',
+  },
+  cardDenom: {
+    fontFamily: 'DynaPuff',
+    fontSize: 12,
+    color: '#000',
+  },
+  cardTime: {
+    fontFamily: 'DynaPuff',
+    fontSize: 24,
+    color: '#000',
+  },
+  cardLabel: {
+    fontFamily: 'Roboto',
+    fontSize: 16,
+    color: '#000',
+    textAlign: 'center',
+  },
+  wideCard: {
+    width: 208,
+    padding: 16,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: '#000',
+    alignItems: 'center',
+    gap: 8,
+  },
+  kickButton: {
+    padding: 32,
+    borderRadius: 43,
+    backgroundColor: '#687353',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginVertical: 64,
+  },
+  kickText: {
+    fontFamily: 'DynaPuff',
+    fontSize: 41,
+    color: '#FFF',
+  },
+  undoButton: {
+    padding: 16,
+    borderRadius: 15,
+    backgroundColor: '#FFD700',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginVertical: 16,
+  },
+  undoText: {
+    fontFamily: 'DynaPuff',
+    fontSize: 20,
+    color: '#000',
+  },
+  finishButton: {
+    padding: 16,
+    borderRadius: 25,
+    backgroundColor: '#687353',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginVertical: 16,
+  },
+  finishText: {
+    fontFamily: 'DynaPuff',
+    fontSize: 24,
+    color: '#FFF',
+  },
+  infoBox: {
+    width: 312,
+    padding: 8,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: '#000',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    alignSelf: 'center',
+  },
+  infoIcon: {
+    fontSize: 16,
+    marginTop: 2,
+  },
+  infoText: {
+    flex: 1,
+    fontFamily: 'Roboto',
+    fontSize: 12,
+    color: '#000',
+  },
+});
