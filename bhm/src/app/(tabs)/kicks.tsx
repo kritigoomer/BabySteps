@@ -36,11 +36,18 @@ export default function KicksScreen() {
           <Text style={styles.wideCardText}>11AM-1PM</Text>
           <Text style={styles.cardLabel}>Your baby is most active</Text>
         </View>
-        <View style={styles.card}>
+        <View style={styles.compCard}>
           <Text style={styles.cardText}>{comparison}</Text>
           <Text style={styles.cardLabel}>Compared to last session</Text>
+          <View style={styles.infoRow}>
+          <Text style={styles.infoIcon}>ℹ️</Text>
+          <Text style={styles.infoText}>
+            If significantly different, consider seeing a doctor.
+          </Text>
+      </View>
         </View>
       </View>
+      
 
       <View style={styles.trackSection}>
         <TouchableOpacity
@@ -79,7 +86,7 @@ const styles = StyleSheet.create({
   cardsContainer: {
     marginTop: 128,
     padding: 16,
-    gap: 32,
+    gap: 16,
     flexWrap: 'wrap',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -104,6 +111,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  compCard: {
+    width: 330,
+    padding: 16,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: '#687353',
+    backgroundColor: '#BDCAA5',
+    justifyContent: "space-evenly",
+    alignItems: 'center',
+    gap: 8,
+  },
   cardNumber: {
     fontFamily: 'DynaPuff',
     fontSize: 32,
@@ -117,12 +135,13 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     fontFamily: 'Roboto',
-    fontSize: 12,
+    fontSize: 14,
     color: '#000',
     textAlign: 'center',
   },
   wideCard: {
-    width: 288,
+    width: 330,
+    marginHorizontal: 32,
     padding: 16,
     borderRadius: 15,
     borderWidth: 2,
@@ -142,6 +161,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   trackButton: {
+    marginTop: 64,
     padding: 16,
     borderRadius: 25,
     backgroundColor: '#687353',
@@ -159,7 +179,6 @@ const styles = StyleSheet.create({
   },
   infoIcon: {
     fontSize: 16,
-    marginTop: 2,
   },
   infoText: {
     flex: 1,
@@ -184,12 +203,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 8,
+    gap: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#BDCAA5',
   },
   logDate: {
     fontFamily: 'Roboto',
     fontSize: 16,
+    marginRight: 8,
     color: '#000',
   },
   logDetails: {

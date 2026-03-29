@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   logsContainer: {
-    backgroundColor: '#FFF2E8',
+    backgroundColor: '#fff2e88d',
     borderRadius: 10,
     padding: 16,
   },

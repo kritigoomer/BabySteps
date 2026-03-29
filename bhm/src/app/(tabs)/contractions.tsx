@@ -60,7 +60,7 @@ export default function ContractionsScreen() {
             setSessionLength(text);
           }}
           placeholder="custom time"
-          placeholderTextColor="#000"
+          placeholderTextColor="#dcb1b1"
           keyboardType="numeric"
         />
 
@@ -110,9 +110,8 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 64,
-    paddingTop: 154,
-    paddingBottom: 106,
+    marginHorizontal: 16,
+    paddingTop: 128,
   },
   question: {
     fontFamily: 'Roboto',
@@ -168,10 +167,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   customInput: {
-    width: 212,
-    height: 42,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 4,
     borderRadius: 10,
     borderWidth: 2,
     borderColor: '#000',
@@ -183,6 +180,7 @@ const styles = StyleSheet.create({
   },
   beginButton: {
     padding: 16,
+    marginTop: 64,
     borderRadius: 25,
     backgroundColor: '#4C211E',
     alignItems: 'center',
@@ -205,12 +203,12 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   logsSection: {
-    marginTop: 16,
+    paddingVertical: 32,
   },
   logsTitle: {
     fontFamily: 'DynaPuff',
     fontSize: 24,
-    color: '#4C211E',
+    color: '#4c211e',
     marginBottom: 8,
   },
   logsScroll: {
@@ -220,17 +218,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 8,
+    gap: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#FFF',
+    borderBottomColor: '#4c211e',
   },
   logDate: {
     fontFamily: 'Roboto',
     fontSize: 16,
+    marginRight: 8,
     color: '#000',
   },
   logDetails: {
     fontFamily: 'Roboto',
     fontSize: 14,
-    color: '#4C211E',
+    color: '#4c211e',
   },
 });
