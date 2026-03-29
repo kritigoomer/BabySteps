@@ -39,7 +39,7 @@ export default function LoginScreen() {
             <TextInput
               style={styles.input}
               placeholder="Email"
-              placeholderTextColor="#4C211E"
+              placeholderTextColor="#ad8e8c"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -48,7 +48,7 @@ export default function LoginScreen() {
             <TextInput
               style={styles.input}
               placeholder="Password"
-              placeholderTextColor="#4C211E"
+              placeholderTextColor="#ad8e8c"
               value={password}
               onChangeText={setPassword}
               secureTextEntry

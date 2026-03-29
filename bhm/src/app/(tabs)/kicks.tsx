@@ -51,6 +51,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
   },
   cardsContainer: {
+    marginTop: 128,
     padding: 16,
     gap: 32,
     flexWrap: 'wrap',
@@ -58,7 +59,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   card: {
-    width: 112,
     padding: 16,
     borderRadius: 15,
     borderWidth: 2,
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   },
   cardText: {
     fontFamily: 'DynaPuff',
-    fontSize: 20,
+    fontSize: 24,
     color: '#000',
     textAlign: 'center',
   },

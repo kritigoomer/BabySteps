@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'expo-router';
 import {
   SafeAreaView,
   StyleSheet,
@@ -8,7 +9,7 @@ import {
 } from 'react-native';
 
 export default function CountingKicksScreen() {
-  const [kickCount, setKickCount] = useState(7);
+  const [kickCount, setKickCount] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [averageTime, setAverageTime] = useState(0);
   const [startTime, setStartTime] = useState(Date.now());
@@ -45,10 +46,11 @@ export default function CountingKicksScreen() {
     const secs = seconds % 60;
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+  const router = useRouter();
 
   return (
     <SafeAreaView style={styles.container}>
-      <TouchableOpacity style={styles.closeButton}>
+      <TouchableOpacity style={styles.closeButton} onPress={() => router.push('/(tabs)/kicks')}>
         <Text style={styles.closeText}>✕</Text>
       </TouchableOpacity>
 

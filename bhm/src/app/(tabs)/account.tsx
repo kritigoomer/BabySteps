@@ -5,11 +5,16 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ScrollView,
 } from 'react-native';
 
 export default function AccountScreen() {
   return (
     <SafeAreaView style={styles.container}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent} // 2. Added container style
+        showsVerticalScrollIndicator={false}
+      >
       <View style={styles.profileSection}>
         <View style={styles.profileImage} />
         <View style={styles.profileInfo}>
@@ -40,19 +45,24 @@ export default function AccountScreen() {
         <Text style={styles.logsTitle}>Recent Logs</Text>
         <View style={styles.logsPlaceholder} />
       </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+ container: {
     flex: 1,
     backgroundColor: '#FFF',
+  },
+  scrollContent: {
+    paddingBottom: 40, // Ensures content doesn't hug the bottom of the screen
   },
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 32,
+    paddingVertical: 32,
+    paddingHorizontal: 32,
     gap: 16,
   },
   profileImage: {
