@@ -68,17 +68,26 @@ export default function ContractionsScreen() {
 
         <TouchableOpacity
           style={styles.beginButton}
-          onPress={async () => {
-            const durationMs = parseFloat(sessionLength) * 3600000;
-            // 🔥 FIRST-TIME LOGIC — now happens right here on the Begin button
-            await startArduinoSession(durationMs);
-            // Then navigate to the active contractions screen
-            router.push({
-              pathname: '/active-contractions',
-              params: { sessionLength: durationMs },
-            });
-          }}
-        >
+          onPress={() => {
+  let durationMs;
+
+  const input = customTime.trim().toLowerCase();
+
+  if (input === "demo") {
+    durationMs = 120000;
+  } else if (!isNaN(Number(input)) && Number(input) > 0) {
+    durationMs = Number(input) * 3600000;
+  } else {
+    durationMs = 3600000; // fallback 1 hour
+  }
+
+  startArduinoSession(durationMs);
+
+  router.push({
+    pathname: '/active-contractions',
+    params: { sessionLength: durationMs },
+  });
+}}>
           <Text style={styles.beginButtonText}>Begin Contractions</Text>
         </TouchableOpacity>
 

@@ -95,7 +95,7 @@ export default function ActiveContractions() {
 
   // WEBSOCKET
   useEffect(() => {
-    const socket = new WebSocket(`ws://${IP}:3000`);
+    const socket = new WebSocket(`ws://192.168.4.137:3000`);
 
     socket.onopen = () => console.log("Connected to backend");
 
@@ -493,9 +493,9 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontFamily: 'DynaPuff',
     fontSize: 32,
-    color: '#687353',
+    color: '#000',
     textAlign: 'center',
-    marginTop: 16,
+    marginTop: 64,
     marginBottom: 16,
   },
 })

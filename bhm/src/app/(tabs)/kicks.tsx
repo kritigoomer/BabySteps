@@ -52,7 +52,7 @@ export default function KicksScreen() {
           <Text style={styles.cardLabel}>Average Mins Between Kicks</Text>
         </View>
         <View style={styles.card}>
-          <Text style={styles.cardText}>{lastActiveTime}</Text>
+          <Text style={styles.cardText}>this morning</Text>
           <Text style={styles.cardLabel}>Last Active</Text>
         </View>
         <View style={styles.wideCard}>
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: '#687353',
     textAlign: 'center',
-    marginTop: 16,
+    marginTop: 128,
     marginBottom: 16,
   },
 });

@@ -83,6 +83,13 @@ parser.on("data", (line) => {
     };
   }
 
+  else if (data.includes("Session Ended")) {
+  parsed = {
+    event: "session_end",
+    timestamp: Date.now(),
+    data: {}
+  };
+}
   // ignore everything else
   if (!parsed) return;
 
