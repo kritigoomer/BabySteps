@@ -6,7 +6,7 @@ const cors = require("cors");
 
 const app = express();
 app.use(cors());
-app.use(express.json());          // ← NEW: allows POST requests with JSON body
+app.use(express.json());          
 
 const PORT = 3000;
 const server = app.listen(PORT, () => {
@@ -17,7 +17,6 @@ const server = app.listen(PORT, () => {
 const wss = new WebSocket.Server({ server });
 
 // ---- SERIAL SETUP ----
-// CHANGE THIS if COM5 is wrong (check in Windows Device Manager)
 const port = new SerialPort({
   path: "COM5",
   baudRate: 9600,
@@ -25,16 +24,16 @@ const port = new SerialPort({
 
 const parser = port.pipe(new ReadlineParser({ delimiter: "\n" }));
 
-// ✅ NEW: Confirm port opened + error handling
+// Confirm port opened + error handling
 port.on("open", () => {
-  console.log("✅ Serial port opened successfully — Arduino connected");
+  console.log("[SUCCESS] Serial port opened successfully — Arduino connected");
 });
 
 port.on("error", (err) => {
-  console.error("❌ Serial port error:", err.message);
+  console.error("[ERROR] Serial port error:", err.message);
 });
 
-// Arduino data → broadcast to your app
+// Arduino data -> broadcast to app
 parser.on("data", (line) => {
   const data = line.trim();
   console.log("RAW:", data);
@@ -103,7 +102,7 @@ parser.on("data", (line) => {
     }
   });
 });
-// ✅ NEW: API endpoint to START the session
+//API endpoint to start the session
 app.post("/start-session", (req, res) => {
   const durationMs = req.body.duration || 600000; // default = 10 minutes
 
@@ -111,10 +110,10 @@ app.post("/start-session", (req, res) => {
     return res.status(500).json({ error: "Serial port is not open" });
   }
 
-  // This is the exact command the Arduino is waiting for
+  // Arduino waiting for command
   port.write(`SESSION:${durationMs}\n`);
 
-  console.log(`🚀 Sent SESSION:${durationMs} to Arduino`);
+  console.log(`Sent SESSION:${durationMs} to Arduino`);
   res.json({
     status: "started",
     durationSeconds: durationMs / 1000,
