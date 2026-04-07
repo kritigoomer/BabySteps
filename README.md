@@ -55,6 +55,7 @@ React Native App (Expo)
 
 * Arduino (C++)
 * Flex Sensor
+* Tilt Sensor
 * Serial Communication
 
 ---
