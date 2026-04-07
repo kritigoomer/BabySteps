@@ -95,7 +95,7 @@ export default function ActiveContractions() {
 
   // WEBSOCKET
   useEffect(() => {
-    const socket = new WebSocket(`ws://192.168.4.137:3000`);
+    const socket = new WebSocket(`${IP}`);
 
     socket.onopen = () => console.log("Connected to backend");
 
